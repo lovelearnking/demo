@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/reset.css" />
+    <link rel="stylesheet" href="./font/iconfont.css" />
+    <style>
+      /* 样式 */
+      .banner {
+        position: relative;
+        height: 550px;
+      }
+
+      .image-list .item {
+        opacity: 0;
+      }
+
+      .image-list .item.active {
+        opacity: 1;
+      }
+
+      .image-list img {
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%);
+        width: 1920px;
+        height: 550px;
+        filter: brightness(0.95);
+      }
+
+      .control button {
+        position: absolute;
+        top: 50%;
+        /* transform: translateY(-50%); */
+        margin-top: -25px;
+        border: none;
+        background-color: rgba(0 0 0 / 0.1);
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 30px;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+
+      .control .next {
+        right: 100px;
+        transform: rotate(180deg);
+      }
+
+      .control .prev {
+        left: 100px;
+      }
+
+      .banner:hover button {
+        opacity: 1;
+      }
+
+      .indicator-list {
+        display: flex;
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%);
+        bottom: 40px;
+      }
+
+      .indicator-list .item {
+        margin: 0 6px;
+        width: 8px;
+        height: 8px;
+        background-color: #00000033;
+        border-radius: 50%;
+      }
+
+      .indicator-list .item.active {
+        background-color: #fff;
+      }
+
+      .indicator-list .item.active::after {
+        content: "";
+        display: block;
+        transform: translate(3px);
+        width: inherit;
+        height: inherit;
+        background-color: inherit;
+        border-radius: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 结构 -->
+    <!-- 轮播图 -->
+    <div class="banner">
+      <!-- 图片列表 -->
+      <ul class="image-list"></ul>
+      <!-- 左右箭头按钮 -->
+      <div class="control">
+        <button class="prev iconfont icon-arrow"></button>
+        <button class="next iconfont icon-arrow"></button>
+      </div>
+      <!-- 指示器 -->
+      <ul class="indicator-list"></ul>
+    </div>
+
+    <script src="./js/banner_data.js"></script>
+    <script>
+      // 获取元素
+      const bannerEl = document.querySelector(".banner");
+      const imageListEl = bannerEl.querySelector(".image-list");
+      const controlEl = bannerEl.querySelector(".control");
+      const indicatorListEl = bannerEl.querySelector(".indicator-list");
+
+      // 定义变量, 记录状态
+      let prviousIndex = 0; // 前一个索引
+      let currentIndex = 0; // 当前索引
+      let timerID = null; // 计时器
+
+      // 1.动态创建元素
+      // 将长变量变成短变量
+      const length = bannerData.length;
+      for (let i = 0; i < length; i++) {
+        // 创建image-list中的li
+        const imageLiEl = document.createElement("li");
+        imageLiEl.classList.add("item");
+        if (i === 0) {
+          imageLiEl.classList.add("active");
+        }
+        // 创建a元素
+        const aEl = document.createElement("a");
+        aEl.href = "#";
+        // 创建img元素
+        const imageEl = document.createElement("img");
+        imageEl.src = bannerData[i];
+        // 在a元素内追加img元素
+        aEl.append(imageEl);
+        // 在li元素内追加a元素
+        imageLiEl.append(aEl);
+        imageListEl.append(imageLiEl);
+        // 创建indicator-list中的li
+        const indicatorLiEl = document.createElement("li");
+        indicatorLiEl.classList.add("item");
+        if (i === 0) {
+          indicatorLiEl.classList.add("active");
+        }
+        indicatorListEl.append(indicatorLiEl);
+      }
+
+      // 2.逻辑交互效果
+      // 事件委托
+      // 2.1 左右按钮的功能
+      controlEl.addEventListener("click", function (e) {
+        let _this = e.target;
+        // 边界判断
+        // 右按钮的功能
+        // classList.contains() 判断是否包含某个类名, 返回一个布尔值
+        if (_this.classList.contains("next")) {
+          switchBanner("next");
+        }
+        // 左按钮的功能
+        if (_this.classList.contains("prev")) {
+          switchBanner("prev");
+        }
+      });
+
+      // 左右箭头切换函数
+      function switchBanner(direction) {
+        prviousIndex = currentIndex;
+        if (direction === "next") {
+          next();
+        } else if (direction === "prev") {
+          prev();
+        }
+        toggle();
+      }
+
+      // 图片跟提示器切换函数
+      function toggle() {
+        // 图片切换功能
+        // 获取上一张图片
+        const prviousImageEl = imageListEl.children[prviousIndex];
+        // 获取当前图片
+        const currentImageEl = imageListEl.children[currentIndex];
+        // 将上一张图片的active类名去掉, 添加当前图片的active类名
+        prviousImageEl.classList.remove("active");
+        currentImageEl.classList.add("active");
+
+        // 指示器切换
+        // 获取前一个小圆点
+        const prviousCircleEl = indicatorListEl.children[prviousIndex];
+        const currentCircleEl = indicatorListEl.children[currentIndex];
+        // 将上一个提示器的active类名去掉, 添加当前提示器的active类名
+        prviousCircleEl.classList.remove("active");
+        currentCircleEl.classList.add("active");
+      }
+
+      // 左箭头函数
+      function prev() {
+        currentIndex--;
+        if (currentIndex === -1) {
+          currentIndex = length - 1;
+        }
+      }
+      // 右箭头函数
+      function next() {
+        currentIndex++;
+        if (currentIndex === length) {
+          currentIndex = 0;
+        }
+      }
+
+      // 自动轮播功能
+      startTimer();
+      function startTimer() {
+        timerID = setInterval(() => {
+          switchBanner("next");
+        }, 3000);
+      }
+
+      // 鼠标经过banner停止自动轮播, 鼠标离开banner开始自动轮播的效果
+      bannerEl.addEventListener("mouseenter", function () {
+        clearInterval(timerID);
+      });
+      bannerEl.addEventListener("mouseleave", function () {
+        clearInterval(timerID);
+        startTimer();
+      });
+
+      // 指示器的点击功能(时间委托)
+      indicatorListEl.addEventListener("click", function (e) {
+        let _this = e.target;
+        // 边界判断
+        if (_this.tagName === "LI") {
+          prviousIndex = currentIndex;
+          const index = Array.from(indicatorListEl.children).findIndex(
+            (item) => item === _this
+          );
+          currentIndex = index;
+          toggle();
+        }
+      });
+    </script>
+  </body>
+</html>
